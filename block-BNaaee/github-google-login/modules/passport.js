@@ -1,18 +1,34 @@
 var passport = require('passport');
 var GitHubStrategy = require('passport-github').Strategy;
-var GoogleStrategy = require('passport-google-oauth').Strategy;
+var GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 var User = require('../models/User');   
 
 passport.use(new GoogleStrategy({
-    consumerKey: process.env.GOOGLE_CLIENT_ID,
-    consumerSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "/auth/google/callback"
+    clientID : process.env.GOOGLE_CLIENT_ID,
+    clientSecret : process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL : "/auth/google/callback"
   },
-  function(token, tokenSecret, profile, cb) {
+  (accessToken, refreshToken, profile, done) => {
       console.log(profile);
-    User.findOrCreate({ googleId: profile.id }, function (err, user) {
-      return cb(err, user);
+    //   done(null, false)
+
+      var profileData = {
+          name : profile.displayName,
+          photo : profile._json.picture
+      }
+      
+    User.findOne({ googleId: profile.id },  (err, user) => {
+        if(err) return done(err);
+        if(!user) {
+            User.create(profileData, (err, addedUser) => {
+                if(err) return done(err);
+                return done(null, addedUser);
+            })
+        } else {
+            return done(null, user);
+        }
+
     });
   }
 ));
@@ -41,8 +57,10 @@ passport.use(new GitHubStrategy({
                 if(err) return done(err);
                 return done(null, addedUser)
             })
+        } else {
+            return done(null, user);
         }
-        done(null, user);
+
     })
 }))
 
