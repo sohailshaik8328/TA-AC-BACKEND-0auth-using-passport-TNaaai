@@ -3,8 +3,9 @@ var Schema = mongoose.Schema;
 
 var passportUserSchema = new Schema({
     name : String,
-    email : {type : String, required : false, unique : true},
-    username : {type : String, required : false, unique : true},
+    email : {type : String, required : true, unique : true},
+    username : {type : String, required : true, unique : true},
+    password : {type : String},
     photo : {type : String}
 }, {timestamps : true});
 
